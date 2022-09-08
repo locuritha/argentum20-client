@@ -20,8 +20,8 @@ Public game_resolution As D3DDISPLAYMODE
 
 Public Sub get_game_resolution(ByRef mode As D3DDISPLAYMODE)
     'For the time being we hard code it to 1024x768x32
-    mode.Width = 1024
-    mode.Height = 768
+    mode.Width = 1920
+    mode.Height = 1080
     mode.RefreshRate = 60
     mode.format = D3DFMT_A8R8G8B8
 End Sub
@@ -102,7 +102,7 @@ On Error Resume Next
     D3DWindow.BackBufferFormat = game_resolution.format
     D3DWindow.SwapEffect = D3DSWAPEFFECT_DISCARD
     D3DWindow.BackBufferCount = 1
-    D3DWindow.hDeviceWindow = frmMain.renderer.hwnd
+    D3DWindow.hDeviceWindow = frmMain.hwnd
     D3DWindow.EnableAutoDepthStencil = 1
     D3DWindow.AutoDepthStencilFormat = D3DFMT_D16
     Err.Clear

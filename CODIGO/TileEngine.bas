@@ -561,16 +561,14 @@ Public Sub Init_TileEngine()
     Set keysMovementPressedQueue = New clsArrayList
     Call keysMovementPressedQueue.Initialize(1, 4)
     
-    HalfWindowTileHeight = (frmMain.renderer.ScaleHeight / 32) \ 2
-    HalfWindowTileWidth = (frmMain.renderer.ScaleWidth / 32) \ 2
+    HalfWindowTileHeight = (frmMain.ScaleHeight / 32) \ 2
+    HalfWindowTileWidth = (frmMain.ScaleWidth / 32) \ 2
     
-    HalfConnectTileHeight = (frmConnect.render.ScaleHeight / 32) \ 2
-    HalfConnectTileWidth = (frmConnect.render.ScaleWidth / 32) \ 2
-    'ReyarB ver si es mejor hacerlo en otro lado, Graficos muy grandes aparecen de la nada.
-        'TileBufferSizeX = 11
-        'TileBufferSizeY = 11
-    TileBufferSizeX = 14
-    TileBufferSizeY = 18
+    HalfConnectTileHeight = (frmConnect.ScaleHeight / 32) \ 2
+    HalfConnectTileWidth = (frmConnect.ScaleWidth / 32) \ 2
+
+    TileBufferSizeX = 25
+    TileBufferSizeY = 25
     
     TileBufferPixelOffsetX = -TileBufferSizeX * TilePixelWidth
     TileBufferPixelOffsetY = -TileBufferSizeY * TilePixelHeight
@@ -578,10 +576,10 @@ Public Sub Init_TileEngine()
     ReDim MapData(XMinMapSize To XMaxMapSize, YMinMapSize To YMaxMapSize) As MapBlock
     
     
-    MinXBorder = XMinMapSize + (frmMain.renderer.ScaleWidth \ 64)
-    MaxXBorder = XMaxMapSize - (frmMain.renderer.ScaleWidth \ 64)
-    MinYBorder = YMinMapSize + (frmMain.renderer.ScaleHeight \ 64)
-    MaxYBorder = YMaxMapSize - (frmMain.renderer.ScaleHeight \ 64)
+    MinXBorder = XMinMapSize + (frmMain.ScaleWidth \ 64)
+    MaxXBorder = XMaxMapSize - (frmMain.ScaleWidth \ 64)
+    MinYBorder = YMinMapSize + (frmMain.ScaleHeight \ 64)
+    MaxYBorder = YMaxMapSize - (frmMain.ScaleHeight \ 64)
     MinYBorder = MinYBorder
 
     

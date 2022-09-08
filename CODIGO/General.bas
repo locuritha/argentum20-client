@@ -1106,9 +1106,9 @@ On Error GoTo Main_Err
     
     Call load_game_settings
     
-    If PantallaCompleta Then
-        Call Resolution.SetResolution
-    End If
+'    If PantallaCompleta Then
+'        Call Resolution.SetResolution
+'    End If
     
     Call engine_init 'initializes DX
     

@@ -7,13 +7,13 @@ Begin VB.Form frmConnect
    BorderStyle     =   0  'None
    Caption         =   "Argentum20"
    ClientHeight    =   11520
-   ClientLeft      =   15
-   ClientTop       =   105
+   ClientLeft      =   12
+   ClientTop       =   108
    ClientWidth     =   15360
    ControlBox      =   0   'False
    BeginProperty Font 
       Name            =   "Tahoma"
-      Size            =   8.25
+      Size            =   8.4
       Charset         =   0
       Weight          =   400
       Underline       =   0   'False
@@ -26,16 +26,25 @@ Begin VB.Form frmConnect
    MaxButton       =   0   'False
    MinButton       =   0   'False
    Moveable        =   0   'False
-   ScaleHeight     =   768
+   ScaleHeight     =   960
    ScaleMode       =   3  'Pixel
-   ScaleWidth      =   1024
+   ScaleWidth      =   1280
    StartUpPosition =   2  'CenterScreen
    Visible         =   0   'False
+   Begin VB.TextBox txtNombre 
+      Height          =   492
+      Left            =   7200
+      TabIndex        =   0
+      Text            =   "Text1"
+      Top             =   5520
+      Visible         =   0   'False
+      Width           =   972
+   End
    Begin MSWinsockLib.Winsock AuthSocket 
       Left            =   120
       Top             =   120
-      _ExtentX        =   741
-      _ExtentY        =   741
+      _ExtentX        =   593
+      _ExtentY        =   593
       _Version        =   393216
       RemoteHost      =   "45.235.99.71"
       RemotePort      =   4004
@@ -43,8 +52,8 @@ Begin VB.Form frmConnect
    Begin InetCtlsObjects.Inet Inet1 
       Left            =   12600
       Top             =   5880
-      _ExtentX        =   1005
-      _ExtentY        =   1005
+      _ExtentX        =   995
+      _ExtentY        =   995
       _Version        =   393216
    End
    Begin VB.Timer Timer2 
@@ -58,52 +67,6 @@ Begin VB.Form frmConnect
       Interval        =   1
       Left            =   14640
       Top             =   240
-   End
-   Begin VB.PictureBox render 
-      Appearance      =   0  'Flat
-      BackColor       =   &H00000000&
-      BorderStyle     =   0  'None
-      BeginProperty Font 
-         Name            =   "Tahoma"
-         Size            =   8.25
-         Charset         =   0
-         Weight          =   700
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      ForeColor       =   &H80000008&
-      Height          =   11520
-      Left            =   0
-      ScaleHeight     =   768
-      ScaleMode       =   3  'Pixel
-      ScaleWidth      =   1024
-      TabIndex        =   0
-      Top             =   0
-      Width           =   15360
-      Begin VB.TextBox txtNombre 
-         Alignment       =   2  'Center
-         Appearance      =   0  'Flat
-         BackColor       =   &H00000000&
-         BorderStyle     =   0  'None
-         BeginProperty Font 
-            Name            =   "Verdana"
-            Size            =   11.25
-            Charset         =   0
-            Weight          =   700
-            Underline       =   0   'False
-            Italic          =   0   'False
-            Strikethrough   =   0   'False
-         EndProperty
-         ForeColor       =   &H00E0E0E0&
-         Height          =   300
-         Left            =   6240
-         MaxLength       =   18
-         TabIndex        =   1
-         Top             =   3360
-         Visible         =   0   'False
-         Width           =   2130
-      End
    End
 End
 Attribute VB_Name = "frmConnect"
@@ -160,12 +123,42 @@ Private Sub Form_Activate()
     ParticleLluviaDorada = General_Particle_Create(208, -1, -1)
 
     
+    
     Exit Sub
 
 Form_Activate_Err:
     Call RegistrarError(Err.Number, Err.Description, "frmConnect.Form_Activate", Erl)
     Resume Next
     
+End Sub
+
+Private Sub Form_DblClick()
+   On Error GoTo render_DblClick_Err
+    
+
+    Select Case QueRender
+
+        Case 2
+            
+            If PJSeleccionado < 1 Then Exit Sub
+
+            Call Sound.Sound_Play(SND_CLICK)
+
+            If IntervaloPermiteConectar Then
+                Call LogearPersonaje(Pjs(PJSeleccionado).nombre)
+
+            End If
+
+        Case 3
+        
+    End Select
+
+    
+    Exit Sub
+
+render_DblClick_Err:
+    Call RegistrarError(Err.Number, Err.Description, "frmConnect.render_DblClick", Erl)
+    Resume Next
 End Sub
 
 Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
@@ -222,39 +215,8 @@ End Sub
 
 
 
-
-Private Sub render_DblClick()
-    
-    On Error GoTo render_DblClick_Err
-    
-
-    Select Case QueRender
-
-        Case 2
-            
-            If PJSeleccionado < 1 Then Exit Sub
-
-            Call Sound.Sound_Play(SND_CLICK)
-
-            If IntervaloPermiteConectar Then
-                Call LogearPersonaje(Pjs(PJSeleccionado).nombre)
-
-            End If
-
-        Case 3
-        
-    End Select
-
-    
-    Exit Sub
-
-render_DblClick_Err:
-    Call RegistrarError(Err.Number, Err.Description, "frmConnect.render_DblClick", Erl)
-    Resume Next
-    
-End Sub
 #If PYMMO = 1 Then
-Private Sub render_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub form_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
     
     On Error GoTo render_MouseUp_Err
     
@@ -682,7 +644,7 @@ End Sub
 
 #ElseIf PYMMO = 0 Then
 
-Private Sub render_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub form_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
     
     On Error GoTo render_MouseUp_Err
     

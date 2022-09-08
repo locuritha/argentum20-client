@@ -190,15 +190,15 @@ Private Sub Engine_InitExtras()
     With Render_Connect_Rect
         .Top = 0
         .Left = 0
-        .Right = frmConnect.render.ScaleWidth
-        .Bottom = frmConnect.render.ScaleHeight
+        .Right = frmConnect.ScaleWidth
+        .Bottom = frmConnect.ScaleHeight
     End With
     
     With Render_Main_Rect
         .Top = 0
         .Left = 0
-        .Right = frmMain.renderer.ScaleWidth
-        .Bottom = frmMain.renderer.ScaleHeight
+        .Right = frmMain.ScaleWidth
+        .Bottom = frmMain.ScaleHeight
     End With
     
     Call Engine_InitColors
@@ -3288,7 +3288,7 @@ Public Sub RenderConnect(ByVal tilex As Integer, ByVal tiley As Integer, ByVal P
         Engine_Text_Render "Gulfas Morgolock", 454, 367, ColorGM, 1
         Engine_Text_Render "<Creador del Mundo>", 443, 382, ColorGM, 1
 
-        Engine_Text_Render_LetraChica "v" & App.Major & "." & App.Minor & " Build: " & App.Revision, 40, 20, COLOR_WHITE, 4, False
+       ' Engine_Text_Render_LetraChica "v" & App.Major & "." & App.Minor & " Build: " & App.Revision, 40, 20, COLOR_WHITE, 4, False
     End If
 
     LastOffsetX = ParticleOffsetX
@@ -3309,25 +3309,15 @@ Public Sub RenderConnect(ByVal tilex As Integer, ByVal tiley As Integer, ByVal P
 
     Call RGBAList(cc, 255, 255, 255, 255)
 
-    Draw_Grh TempGrh, (frmConnect.ScaleWidth - GrhData(TempGrh.GrhIndex).pixelWidth) \ 2 + 6, 10, 0, 1, cc(), False
-
-    'Logo nuevo
-    'Marco
-    Call InitGrh(TempGrh, 1169)
-
-    Draw_Grh TempGrh, 0, 0, 0, 0, COLOR_WHITE, False
-
-    Call InitGrh(TempGrh, 16577)
-
-    Draw_Grh TempGrh, 810, 655, 0, 1, cc(), False
+   
 
     If FadeInAlpha > 0 Then
         Call Engine_Draw_Box(0, 0, frmConnect.ScaleWidth, frmConnect.ScaleHeight, RGBA_From_Comp(0, 0, 0, FadeInAlpha))
         FadeInAlpha = FadeInAlpha - 10 * timerTicksPerFrame
     End If
 
-    ' Draw_Grh TempGrh, 480, 100, 1, 1, cc(), False
-    Call Engine_EndScene(Render_Connect_Rect, frmConnect.render.hwnd)
+    Draw_Grh TempGrh, D3DWindow.BackBufferWidth / 2 - 100, D3DWindow.BackBufferHeight / 3, 1, 1, cc(), False
+    Call Engine_EndScene(Render_Connect_Rect, frmConnect.hwnd)
     
     FrameTime = GetTickCount()
     'FramesPerSecCounter = FramesPerSecCounter + 1
@@ -3364,7 +3354,7 @@ Public Sub RenderCrearPJ(ByVal tilex As Integer, ByVal tiley As Integer, ByVal P
 
     Draw_Grh TempGrh, 0, 0, 0, 0, COLOR_WHITE, False
 
-    Call Engine_EndScene(Render_Connect_Rect, frmConnect.render.hwnd)
+    Call Engine_EndScene(Render_Connect_Rect, frmConnect.hwnd)
 
     FrameTime = GetTickCount()
     FramesPerSecCounter = FramesPerSecCounter + 1
@@ -3398,7 +3388,7 @@ Public Sub rendercuenta(ByVal tilex As Integer, ByVal tiley As Integer, ByVal Pi
     
     'Call Particle_Group_Render(ParticleLluviaDorada, 400, 0)
 
-    Call Engine_EndScene(Render_Connect_Rect, frmConnect.render.hwnd)
+    Call Engine_EndScene(Render_Connect_Rect, frmConnect.hwnd)
     
     Exit Sub
 
