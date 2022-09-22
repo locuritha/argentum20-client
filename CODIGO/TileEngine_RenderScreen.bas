@@ -139,7 +139,8 @@ Sub RenderScreen(ByVal center_x As Integer, ByVal center_y As Integer, ByVal Pix
 
     ' *********************************
     ' Layer 1 loop
-    
+    MaxX = min(MaxX, 100)
+     MaxY = min(MaxY, 100)
     For y = MinY To MaxY
         For x = MinX To MaxX
             
@@ -161,7 +162,8 @@ Sub RenderScreen(ByVal center_x As Integer, ByVal center_y As Integer, ByVal Pix
     Call DirectDevice.SetRenderState(D3DRS_ALPHATESTENABLE, True) ' Para no pisar los reflejos
     
     ScreenY = StartBufferedY
-
+    MaxBufferedX = min(MaxBufferedX, 100)
+     MaxBufferedY = min(MaxBufferedY, 100)
     For y = MinBufferedY To MaxBufferedY
         ScreenX = StartBufferedX
 

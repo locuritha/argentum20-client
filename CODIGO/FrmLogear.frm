@@ -4,9 +4,9 @@ Begin VB.Form FrmLogear
    AutoRedraw      =   -1  'True
    BackColor       =   &H00000000&
    BorderStyle     =   0  'None
-   ClientHeight    =   4005
-   ClientLeft      =   11865
-   ClientTop       =   9450
+   ClientHeight    =   3996
+   ClientLeft      =   11868
+   ClientTop       =   9456
    ClientWidth     =   5340
    ClipControls    =   0   'False
    ControlBox      =   0   'False
@@ -15,9 +15,9 @@ Begin VB.Form FrmLogear
    MaxButton       =   0   'False
    MinButton       =   0   'False
    Moveable        =   0   'False
-   ScaleHeight     =   267
+   ScaleHeight     =   333
    ScaleMode       =   3  'Pixel
-   ScaleWidth      =   356
+   ScaleWidth      =   445
    ShowInTaskbar   =   0   'False
    Begin VB.TextBox txtPort 
       BackColor       =   &H80000001&
@@ -49,7 +49,7 @@ Begin VB.Form FrmLogear
       BorderStyle     =   0  'None
       BeginProperty Font 
          Name            =   "Tahoma"
-         Size            =   9.75
+         Size            =   9.6
          Charset         =   0
          Weight          =   700
          Underline       =   0   'False
@@ -74,7 +74,7 @@ Begin VB.Form FrmLogear
       BorderStyle     =   0  'None
       BeginProperty Font 
          Name            =   "Tahoma"
-         Size            =   9.75
+         Size            =   9.6
          Charset         =   0
          Weight          =   700
          Underline       =   0   'False
@@ -200,6 +200,16 @@ Private cBotonSalir As clsGraphicalButton
 Private cBotonCuenta As clsGraphicalButton
 Private cBotonIngresar As clsGraphicalButton
 
+Private window As UIElem
+Private label As UIElem
+Attribute label.VB_VarHelpID = -1
+
+Implements UIEventHandler
+
+Public Sub UIEventHandler_onmousemove(ByVal mousex As Long, ByVal mousey As Long)
+
+End Sub
+    
 Private Sub MoverForm()
     
     On Error GoTo moverForm_Err
@@ -300,6 +310,9 @@ Private Sub Form_Activate()
     Me.Left = frmConnect.Left + (frmConnect.Width - Me.Width) / 2
 End Sub
 
+
+
+
 Private Sub Form_Load()
 
     On Error GoTo Form_Load_Err
@@ -310,6 +323,17 @@ Private Sub Form_Load()
     Call Aplicar_Transparencia(Me.hwnd, 240)
     
     Me.Picture = LoadInterface("ventanaconectar.bmp")
+
+    Set window = New UIWindow
+    Call Me.UIEventHandler_onmousemove(0, 0)
+    window.width = 500
+    window.height = 400
+    window.top = D3DWindow.BackBufferHeight / 2 - (window.height / 2)
+    window.left = D3DWindow.BackBufferWidth / 2 - (window.width / 2)
+    
+    Call engine_ui.add_ui_object(window, Me)
+    Set label = New UILabel
+    Call window.addelem(label)
     
     #If DEBUGGING = 1 Then
         txtPort.visible = True
@@ -476,3 +500,5 @@ PasswordTxt_KeyDown_Err:
     Resume Next
     
 End Sub
+
+

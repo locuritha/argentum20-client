@@ -2342,7 +2342,8 @@ Public Sub Start()
                     RenderCrearPJ 76, 82, 0, 0
 
             End Select
-
+            
+          
             Sound.Sound_Render
         Else
             Sleep 60&
@@ -2353,6 +2354,7 @@ Public Sub Start()
 
         Call modNetwork.Poll
         Call svb_run_callbacks
+
     Loop
 
     EngineRun = False
@@ -3317,8 +3319,13 @@ Public Sub RenderConnect(ByVal tilex As Integer, ByVal tiley As Integer, ByVal P
     End If
 
     Draw_Grh TempGrh, D3DWindow.BackBufferWidth / 2 - 100, D3DWindow.BackBufferHeight / 3, 1, 1, cc(), False
+    
+    
+    Call engine_ui.render
+    
     Call Engine_EndScene(Render_Connect_Rect, frmConnect.hwnd)
     
+
     FrameTime = GetTickCount()
     'FramesPerSecCounter = FramesPerSecCounter + 1
     timerElapsedTime = GetElapsedTime()
@@ -4616,17 +4623,17 @@ Engine_Draw_Load_Err:
     
 End Sub
 
-Public Sub Engine_Draw_Box_Border(ByVal x As Integer, ByVal y As Integer, ByVal Width As Integer, ByVal Height As Integer, Color As RGBA, ColorLine As RGBA)
+Public Sub Engine_Draw_Box_Border(ByVal x As Integer, ByVal y As Integer, ByVal width As Integer, ByVal height As Integer, Color As RGBA, ColorLine As RGBA, Optional ByVal border_size = 4)
     
     On Error GoTo Engine_Draw_Box_Border_Err
     
 
     Call Engine_Draw_Box(x, y, Width, Height, Color)
 
-    Call Engine_Draw_Box(x, y, Width, 1, ColorLine)
-    Call Engine_Draw_Box(x, y + Height, Width, 1, ColorLine)
-    Call Engine_Draw_Box(x, y, 1, Height, ColorLine)
-    Call Engine_Draw_Box(x + Width, y, 1, Height, ColorLine)
+    Call Engine_Draw_Box(x, y, width, border_size, ColorLine)
+    Call Engine_Draw_Box(x, y + height, width, border_size, ColorLine)
+    Call Engine_Draw_Box(x, y, border_size, height, ColorLine)
+    Call Engine_Draw_Box(x + width, y, border_size, height, ColorLine)
 
     
     Exit Sub

@@ -1101,9 +1101,9 @@ Function LegalPos(ByVal x As Integer, ByVal y As Integer, ByVal Heading As E_Hea
     'Checks to see if a tile position is legal
     '*****************************************************************
     'Limites del mapa
-    If x < MinXBorder Or x > MaxXBorder Or y < MinYBorder Or y > MaxYBorder Then
-        Exit Function
-    End If
+'    If x < MinXBorder Or x > MaxXBorder Or y < MinYBorder Or y > MaxYBorder Then
+'        Exit Function
+'    End If
     
     '¿Hay un personaje?
     If MapData(x, y).charindex > 0 Then
