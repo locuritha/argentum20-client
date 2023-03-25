@@ -2652,7 +2652,7 @@ Public Sub LoadGrhIni()
                     Next
                         
                     ' Tercer lugar: leemos la velocidad de la animacion
-                    .speed = Val(Fields(Frame)) * 2
+                    .speed = Val(Fields(Frame))
                     If .speed <= 0 Then GoTo hErr
                         
                     ' Por ultimo, copiamos las dimensiones del primer frame
