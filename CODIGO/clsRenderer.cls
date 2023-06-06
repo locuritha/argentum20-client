@@ -54,9 +54,23 @@ Private Type NEW_TYPE_VERTEX
     u      As Single
     v      As Single
 End Type
+Dim v1, v2, v3 As Single ' para controlar donde estan los vertices
+Dim s1, s2, s3 As Boolean ' para controlar el sentido de movimiento
+Dim TriVert(0 To 2) As NEW_TYPE_VERTEX '//requerimos 3 vertices para hacer un triangulo
 
 Private mDisplayMode As D3DDISPLAYMODE
-
+Private Function CreateTLVertex(x As Single, y As Single, Z As Single, rhw As Single, _
+                                                Color As Long, Specular As Long, tu As Single, _
+                                                tv As Single) As NEW_TYPE_VERTEX
+    CreateTLVertex.x = x
+    CreateTLVertex.y = y
+    CreateTLVertex.Z = Z
+    CreateTLVertex.rhw = rhw
+    CreateTLVertex.Color = Color
+    CreateTLVertex.Specular = Specular
+    CreateTLVertex.tu = tu
+    CreateTLVertex.tv = tv
+End Function
 Private Sub get_game_resolution(ByRef mode As D3DDISPLAYMODE)
     'For the time being we hard code it to 1024x768x32
     mode.Width = 1024
@@ -100,18 +114,35 @@ On Error Resume Next
     init_dx8_and_d3d = Err.Number
 End Function
 
-Public Function init(ByVal window As Long) As Long
-    init = init_dx8_and_d3d()
-    If init <> 0 Then
-        Debug.Print "init_dx8_and_d3d() failed with code " & init
-        Exit Function
-    End If
-    init = init_dx_device(window, mDirectD3D, mDisplayMode)
-    If init <> 0 Then
-        Debug.Print "init_dx_device() failed with code " & init
-        Exit Function
-    End If
+Public Sub render()
+    On Error GoTo clsRender_Err
     
+    'Call mDirectDevice.Clear(0, ByVal 0, D3DCLEAR_TARGET Or D3DCLEAR_ZBUFFER, 0xffffffff, 1, 0)
+    mDirectDevice.Clear 0, ByVal 0, D3DCLEAR_TARGET, D3DColorRGBA(0, 255, 0, 255), 1#, 0
+    mDirectDevice.BeginScene
+    
+    mDirectDevice.DrawPrimitiveUP D3DPT_TRIANGLELIST, 1, TriVert(0), Len(TriVert(0))
+    Call mDirectDevice.EndScene
+      
+    Call mDirectDevice.Present(ByVal 0, ByVal 0, ByVal 0, ByVal 0)
+    Exit Sub
+clsRender_Err:
+    Call RegistrarError(Err.Number, Err.Description, "clsRenderer.render", Erl)
+    Resume Next
+End Sub
+
+Public Function Init(ByVal window As Long) As Long
+    Init = init_dx8_and_d3d()
+    If Init <> 0 Then
+        Debug.Print "init_dx8_and_d3d() failed with code " & Init
+        Exit Function
+    End If
+    Init = init_dx_device(window, mDirectD3D, mDisplayMode)
+    If Init <> 0 Then
+        Debug.Print "init_dx_device() failed with code " & Init
+        Exit Function
+    End If
+    Call InicializarEscena
 End Function
 
 Private Function init_dx_device(ByVal window_handle As Long, _
@@ -172,7 +203,22 @@ On Error Resume Next
     init_dx_device = Err.Number
 End Function
 
-
+Private Sub InicializarEscena()
+' inicializa nuestro triangulo y configuramos el dispositivo
+    v1 = 0
+    v2 = 0
+    v3 = 200
+    s1 = False
+    s2 = False
+    s3 = False
+    TriVert(0) = CreateTLVertex(0, 0, 0, 1, &HFF0000, 0, 0, 0)
+    TriVert(1) = CreateTLVertex(355, 0, 0, 1, &HFF00&, 0, 0, 0)
+    TriVert(2) = CreateTLVertex(200, 170, 0, 1, &HFF&, 0, 0, 0)
+    
+    ' configuramos el dispositivo
+    mDirectDevice.SetVertexShader FVF_TLVERTEX ' le indicamos que tipo de vertices estamos usando
+    mDirectDevice.SetRenderState D3DRS_LIGHTING, 0  ' deshabilitamos la iluminacion (no es necesario)
+End Sub
 
 
 Private Sub Class_Initialize()

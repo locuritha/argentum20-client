@@ -1107,7 +1107,12 @@ On Error GoTo Main_Err
     End If
     
 #If EXPERIMENTAL_RENDERER Then
+    prgRun = True
     Call new_engine_init(ao20rendering.renderer)
+    Call frmMain.Show
+    Call GameLoop
+    Call Unload(frmMain)
+    End
 #Else
     Call engine_init 'initializes DX
 #End If
