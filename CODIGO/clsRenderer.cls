@@ -44,33 +44,23 @@ Private mIdentityMatrix As D3DMATRIX
 
 Const ScreenWidth  As Integer = 1024
 Const ScreenHeight As Integer = 768
-
+Const NEW_FVF_VERTEX = (D3DFVF_XYZRHW Or D3DFVF_TEX1 Or D3DFVF_DIFFUSE Or D3DFVF_SPECULAR)
 
 Private Type NEW_TYPE_VERTEX
-    x       As Single
-    y       As Single
-    z       As Single
-    color   As RGBA
-    u      As Single
-    v      As Single
+    x        As Single
+    y        As Single
+    z        As Single
+    rhw      As Single
+    color    As Long
+    Specular As Long
+    u        As Single
+    v        As Single
 End Type
-Dim v1, v2, v3 As Single ' para controlar donde estan los vertices
-Dim s1, s2, s3 As Boolean ' para controlar el sentido de movimiento
-Dim TriVert(0 To 2) As NEW_TYPE_VERTEX '//requerimos 3 vertices para hacer un triangulo
+
+Dim TriVert(0 To 5) As NEW_TYPE_VERTEX 'New - Vertex Buffer
 
 Private mDisplayMode As D3DDISPLAYMODE
-Private Function CreateTLVertex(x As Single, y As Single, Z As Single, rhw As Single, _
-                                                Color As Long, Specular As Long, tu As Single, _
-                                                tv As Single) As NEW_TYPE_VERTEX
-    CreateTLVertex.x = x
-    CreateTLVertex.y = y
-    CreateTLVertex.Z = Z
-    CreateTLVertex.rhw = rhw
-    CreateTLVertex.Color = Color
-    CreateTLVertex.Specular = Specular
-    CreateTLVertex.tu = tu
-    CreateTLVertex.tv = tv
-End Function
+
 Private Sub get_game_resolution(ByRef mode As D3DDISPLAYMODE)
     'For the time being we hard code it to 1024x768x32
     mode.Width = 1024
@@ -114,23 +104,6 @@ On Error Resume Next
     init_dx8_and_d3d = Err.Number
 End Function
 
-Public Sub render()
-    On Error GoTo clsRender_Err
-    
-    'Call mDirectDevice.Clear(0, ByVal 0, D3DCLEAR_TARGET Or D3DCLEAR_ZBUFFER, 0xffffffff, 1, 0)
-    mDirectDevice.Clear 0, ByVal 0, D3DCLEAR_TARGET, D3DColorRGBA(0, 255, 0, 255), 1#, 0
-    mDirectDevice.BeginScene
-    
-    mDirectDevice.DrawPrimitiveUP D3DPT_TRIANGLELIST, 1, TriVert(0), Len(TriVert(0))
-    Call mDirectDevice.EndScene
-      
-    Call mDirectDevice.Present(ByVal 0, ByVal 0, ByVal 0, ByVal 0)
-    Exit Sub
-clsRender_Err:
-    Call RegistrarError(Err.Number, Err.Description, "clsRenderer.render", Erl)
-    Resume Next
-End Sub
-
 Public Function Init(ByVal window As Long) As Long
     Init = init_dx8_and_d3d()
     If Init <> 0 Then
@@ -142,7 +115,7 @@ Public Function Init(ByVal window As Long) As Long
         Debug.Print "init_dx_device() failed with code " & Init
         Exit Function
     End If
-    Call InicializarEscena
+    Call InitScene
 End Function
 
 Private Function init_dx_device(ByVal window_handle As Long, _
@@ -192,6 +165,7 @@ On Error Resume Next
     Err.Clear
  
     Set mDirectDevice = d3d_obj.CreateDevice(D3DADAPTER_DEFAULT, DevType, window_handle, DevBehaviorFlags, mD3DPP)
+    
     Debug.Print "Create; Direct3D; device: ", Err
     If (Err.Number <> 0) Then
         'if we failed to create the device with D3DFMT_A8R8G8B8 we try to do it with current display fmt
@@ -203,24 +177,6 @@ On Error Resume Next
     init_dx_device = Err.Number
 End Function
 
-Private Sub InicializarEscena()
-' inicializa nuestro triangulo y configuramos el dispositivo
-    v1 = 0
-    v2 = 0
-    v3 = 200
-    s1 = False
-    s2 = False
-    s3 = False
-    TriVert(0) = CreateTLVertex(0, 0, 0, 1, &HFF0000, 0, 0, 0)
-    TriVert(1) = CreateTLVertex(355, 0, 0, 1, &HFF00&, 0, 0, 0)
-    TriVert(2) = CreateTLVertex(200, 170, 0, 1, &HFF&, 0, 0, 0)
-    
-    ' configuramos el dispositivo
-    mDirectDevice.SetVertexShader FVF_TLVERTEX ' le indicamos que tipo de vertices estamos usando
-    mDirectDevice.SetRenderState D3DRS_LIGHTING, 0  ' deshabilitamos la iluminacion (no es necesario)
-End Sub
-
-
 Private Sub Class_Initialize()
     Set mDirectX = Nothing
     Set mDirectD3D8 = Nothing
@@ -230,4 +186,59 @@ Private Sub Class_Initialize()
     mDisplayMode.Height = ScreenHeight
     mDisplayMode.RefreshRate = 60
     mDisplayMode.format = D3DFMT_A8R8G8B8
+End Sub
+
+Private Function CreateNewVertex(x As Single, y As Single, z As Single, rhw As Single, _
+                                                color As Long, Specular As Long, u As Single, _
+                                                v As Single) As NEW_TYPE_VERTEX
+    CreateNewVertex.x = x
+    CreateNewVertex.y = y
+    CreateNewVertex.z = z
+    CreateNewVertex.rhw = rhw
+    CreateNewVertex.color = color
+    CreateNewVertex.Specular = Specular
+    CreateNewVertex.u = u
+    CreateNewVertex.v = v
+End Function
+
+Private Sub InitScene()
+    'Init geometry
+    Call Quad(300, 300, 300, 300)
+    
+    ' config device
+    mDirectDevice.SetVertexShader NEW_FVF_VERTEX ' set new vertex format
+'    mDirectDevice.SetRenderState D3DRS_LIGHTING, 0  ' lighting off
+End Sub
+
+Private Sub triangle()
+    TriVert(0) = CreateNewVertex(500, 500, 0, 1, &HFF0000, 0, 0, 0)
+    TriVert(1) = CreateNewVertex(700, 700, 0, 1, &HFF00&, 0, 0, 0)
+    TriVert(2) = CreateNewVertex(300, 700, 0, 1, &HFF&, 0, 0, 0)
+
+End Sub
+
+Private Sub Quad(posX As Single, posY As Single, width As Single, height As Single)
+    TriVert(0) = CreateNewVertex(posX, posY, 0, 1, &HFF0000, 0, 0, 0)
+    TriVert(1) = CreateNewVertex(posX + width, posY, 0, 1, &HFF00&, 0, 0, 0)
+    TriVert(2) = CreateNewVertex(posX, posY + height, 0, 1, &HFF&, 0, 0, 0)
+    TriVert(3) = CreateNewVertex(posX, posY + height, 0, 1, &HFF0000, 0, 0, 0)
+    TriVert(4) = CreateNewVertex(posX + width, posY, 0, 1, &HFF00&, 0, 0, 0)
+    TriVert(5) = CreateNewVertex(posX + width, posY + height, 0, 1, &HFF&, 0, 0, 0)
+End Sub
+
+Public Sub render()
+    On Error GoTo clsRender_Err
+    
+    'Call mDirectDevice.Clear(0, ByVal 0, D3DCLEAR_TARGET Or D3DCLEAR_ZBUFFER, 300000, 1, 0)
+    mDirectDevice.Clear 0, ByVal 0, D3DCLEAR_TARGET, D3DColorRGBA(0, 150, 150, 255), 1#, 0
+    mDirectDevice.BeginScene
+    
+    mDirectDevice.DrawPrimitiveUP D3DPT_TRIANGLELIST, 2, TriVert(0), Len(TriVert(0))
+    Call mDirectDevice.EndScene
+      
+    Call mDirectDevice.Present(ByVal 0, ByVal 0, 0, ByVal 0)
+    Exit Sub
+clsRender_Err:
+    Call RegistrarError(Err.Number, Err.Description, "clsRenderer.render", Erl)
+    Resume Next
 End Sub

@@ -1111,7 +1111,7 @@ On Error GoTo Main_Err
     Call new_engine_init(ao20rendering.renderer)
     Call frmMain.Show
     Call GameLoop
-    Call Unload(frmMain)
+    'Call Unload(frmMain) '//issue Calling svb_shutdown_steam (steam_vb.dll)
     End
 #Else
     Call engine_init 'initializes DX
