@@ -2306,23 +2306,6 @@ Public Function IsCharVisible(ByVal charindex As Integer) As Boolean
 
 End Function
 
-Public Sub GameLoop()
-On Error GoTo GameLoop_Err
-    DoEvents
-    Do While prgRun
-        Call ao20rendering.renderer.render
-        Debug.Print "Zapato"
-        prgRun = False
-    Loop
-
-    EngineRun = False
-    
-    Exit Sub
-
-GameLoop_Err:
-    Call RegistrarError(Err.Number, Err.Description, "engine.Start", Erl)
-    Resume Next
-End Sub
 
 Public Sub Start()
 On Error GoTo Start_Err

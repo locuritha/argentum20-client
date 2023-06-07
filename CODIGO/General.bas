@@ -1095,6 +1095,17 @@ End Function
 
 Sub Main()
 
+
+#If EXPERIMENTAL_RENDERER Then
+    Call ao20game.InitGame
+    prgRun = True
+    Call new_engine_init(ao20rendering.renderer)
+    Call frmMain.Show
+    Call ao20game.MainLoop
+    Call Unload(frmMain)
+    End
+#End If
+
 On Error GoTo Main_Err
     Set FormParser = New clsCursor
     Call FormParser.Init
@@ -1106,16 +1117,7 @@ On Error GoTo Main_Err
         Call Resolution.SetResolution
     End If
     
-#If EXPERIMENTAL_RENDERER Then
-    prgRun = True
-    Call new_engine_init(ao20rendering.renderer)
-    Call frmMain.Show
-    Call GameLoop
-    'Call Unload(frmMain) '//issue Calling svb_shutdown_steam (steam_vb.dll)
-    End
-#Else
     Call engine_init 'initializes DX
-#End If
     Call InitCommonControls
 
     #If DEBUGGING = 0 Then

@@ -722,11 +722,15 @@ Private Sub picInv_Paint()
 End Sub
 
 Private Sub picInvOtherSell_Paint()
+If Not frmComerciarUsu.InvOtherSell Is Nothing Then
     Call frmComerciarUsu.InvOtherSell.ReDraw
+End If
 End Sub
 
 Private Sub picInvUserSell_Paint()
+If Not frmComerciarUsu.InvOtherSell Is Nothing Then
     Call frmComerciarUsu.InvUserSell.ReDraw
+End If
 End Sub
 
 Private Sub Text1_GotFocus()
