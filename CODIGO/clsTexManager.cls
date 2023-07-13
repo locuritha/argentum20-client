@@ -163,7 +163,7 @@ On Error GoTo LoadTexture_ErrHandler
             Exit Function
         End If
         Set Dest = mD3D.CreateTextureFromFileInMemoryEx(device, bytArr(0), UBound(bytArr) + 1, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, _
-                                                            D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, D3DX_FILTER_LINEAR, D3DX_FILTER_LINEAR, &HFF000000, ByVal 0, ByVal 0)
+                                                            D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, D3DX_FILTER_NONE, D3DX_FILTER_NONE, &HFF000000, ByVal 0, ByVal 0)
     #Else
         Dim PathToFile As String
         PathToFile = App.path & "\..\Recursos\Graficos\" & LTrim(FileName) & ".png"
@@ -173,7 +173,7 @@ On Error GoTo LoadTexture_ErrHandler
         End If
 
         Set Dest = mD3D.CreateTextureFromFileEx(device, PathToFile, 0, 0, _
-             1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, D3DX_FILTER_LINEAR, D3DX_FILTER_LINEAR, &HFF000000, ByVal 0, ByVal 0)
+             1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, D3DX_FILTER_NONE, D3DX_FILTER_NONE, &HFF000000, ByVal 0, ByVal 0)
     #End If
     Exit Function
 LoadTexture_ErrHandler:
