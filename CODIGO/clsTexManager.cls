@@ -154,7 +154,7 @@ Init_Err:
     
 End Function
 
-Private Function LoadTexture(ByVal FileName As String, ByRef Dest As Direct3DTexture8) As Long
+Public Function LoadTexture(ByVal FileName As String, ByRef Dest As Direct3DTexture8) As Long
 On Error GoTo LoadTexture_ErrHandler
     Dim bytArr()     As Byte
     #If Compresion = 1 Then

@@ -370,7 +370,7 @@ InitializeUI_Err:
 End Sub
 
 Public Sub InitializeTexture()
-    Set UITexture.Texture = SurfaceDB.CreateTexture(UITexture.TextureWidth, UITexture.TextureHeight)
+    Call SurfaceDB.LoadTexture(str(238), UITexture.Texture)
 End Sub
 
 Public Sub InitializeInspectorUI(ByVal Width As Long, ByVal Height As Long)
