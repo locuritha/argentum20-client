@@ -152,7 +152,7 @@ Function EsArbol(ByVal GrhIndex As Long) As Boolean
     On Error Resume Next
 
     ' List of valid GrhIndex values that represent trees
-    Dim validTreeIndices As Variant
+    Dim validTreeIndices As Long
     validTreeIndices = Array(643, 644, 647, 735, 1121, 2931, _
                              11903, 11904, 11905, 14775, 11906, _
                              70885, 70884, 71042, 71041, _
