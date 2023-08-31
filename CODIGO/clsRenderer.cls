@@ -42,24 +42,54 @@ Private mD3DPP As D3DPRESENT_PARAMETERS
 Private mProjection As D3DMATRIX
 Private mIdentityMatrix As D3DMATRIX
 
+Private mDisplayMode As D3DDISPLAYMODE
+
 Const ScreenWidth  As Integer = 1024
 Const ScreenHeight As Integer = 768
-Const NEW_FVF_VERTEX = (D3DFVF_XYZRHW Or D3DFVF_TEX1 Or D3DFVF_DIFFUSE Or D3DFVF_SPECULAR)
 
-Private Type NEW_TYPE_VERTEX
-    x        As Single
-    y        As Single
-    z        As Single
-    rhw      As Single
-    color    As Long
+Const FVF_UIVERTEX = (D3DFVF_XYZRHW Or D3DFVF_TEX1 Or D3DFVF_DIFFUSE Or D3DFVF_SPECULAR)
+Const FVF_VERTEX = (D3DFVF_XYZ Or D3DFVF_NORMAL Or D3DFVF_TEX1)
+Const QuadDim = 1
+Const MapSize As Integer = 10
+
+Private Type UIVERTEX
+    x As Single
+    y As Single
+    z As Single
+    rhw As Single
+    color As Long
     Specular As Long
-    u        As Single
-    v        As Single
+    u As Single
+    v As Single
 End Type
 
-Dim TriVert(0 To 5) As NEW_TYPE_VERTEX 'New - Vertex Buffer
+Private Type VERTEX
+    x As Single
+    y As Single
+    z As Single
+    nX As Single
+    nY As Single
+    nz As Single
+    u As Single
+    v As Single
+End Type
 
-Private mDisplayMode As D3DDISPLAYMODE
+Dim textures(1 To 10) As Direct3DTexture8
+
+Dim QuadVerts(0 To 5) As UIVERTEX ' 2d quad vertexs
+Dim PlaneVerts(0 To 1000) As VERTEX ' 3d plane vertexs
+Dim MapVerts(0 To 1000) As VERTEX ' 3d plane vertexs
+
+Dim objectVertexBuffer As Direct3DVertexBuffer8 ' Object vertex buffer
+Dim uiVertexBuffer As Direct3DVertexBuffer8 ' UI vertex buffer
+Dim mapVertexBuffer As Direct3DVertexBuffer8 ' Map vertex buffer
+Dim mapIndexBuffer As Direct3DIndexBuffer8 ' Map index buffer
+Dim offsetObject As Integer ' object vertex pos to write
+
+
+Dim matProj As D3DMATRIX
+Dim matView As D3DMATRIX
+Dim matWorld As D3DMATRIX
 
 Private Sub get_game_resolution(ByRef mode As D3DDISPLAYMODE)
     'For the time being we hard code it to 1024x768x32
@@ -188,52 +218,219 @@ Private Sub Class_Initialize()
     mDisplayMode.format = D3DFMT_A8R8G8B8
 End Sub
 
-Private Function CreateNewVertex(x As Single, y As Single, z As Single, rhw As Single, _
+Private Function CreateUIVertex(x As Single, y As Single, rhw As Single, _
                                                 color As Long, Specular As Long, u As Single, _
-                                                v As Single) As NEW_TYPE_VERTEX
-    CreateNewVertex.x = x
-    CreateNewVertex.y = y
-    CreateNewVertex.z = z
-    CreateNewVertex.rhw = rhw
-    CreateNewVertex.color = color
-    CreateNewVertex.Specular = Specular
-    CreateNewVertex.u = u
-    CreateNewVertex.v = v
+                                                v As Single) As UIVERTEX
+    CreateUIVertex.x = x
+    CreateUIVertex.y = y
+    CreateUIVertex.z = 0
+    CreateUIVertex.rhw = rhw
+    CreateUIVertex.color = color
+    CreateUIVertex.Specular = Specular
+    CreateUIVertex.u = u
+    CreateUIVertex.v = v
 End Function
 
-Private Sub InitScene()
-    'Init geometry
-    Call Quad(300, 300, 300, 300)
+Private Function CreateVertex(x As Single, y As Single, z As Single, _
+                                            u As Single, v As Single) As VERTEX
+    CreateVertex.x = x
+    CreateVertex.y = y
+    CreateVertex.z = z
+    CreateVertex.u = u
+    CreateVertex.v = v
+End Function
+
+Private Sub initUI(PosX As Single, PosY As Single, Width As Single, Height As Single)
+    QuadVerts(0) = CreateUIVertex(PosX, PosY, 1, &HFF0000, 0, 0, 0)
+    QuadVerts(1) = CreateUIVertex(PosX + Width, PosY, 1, &HFF0000, 0, 1, 0)
+    QuadVerts(2) = CreateUIVertex(PosX, PosY + Height, 1, &HFF0000, 0, 0, 1)
+    QuadVerts(3) = CreateUIVertex(PosX, PosY + Height, 1, &HFF&, 0, 0, 1)
+    QuadVerts(4) = CreateUIVertex(PosX + Width, PosY, 1, &HFF&, 0, 1, 0)
+    QuadVerts(5) = CreateUIVertex(PosX + Width, PosY + Height, 1, &HFF&, 0, 1, 1)
+        
+    ' set up the vertex buffer
+    Set uiVertexBuffer = mDirectDevice.CreateVertexBuffer(Len(QuadVerts(0)) * 6, D3DUSAGE_WRITEONLY, FVF_UIVERTEX, D3DPOOL_MANAGED)
+    If uiVertexBuffer Is Nothing Then Debug.Print "ERROR: can't create the vertex buffer": Exit Sub
     
-    ' config device
-    mDirectDevice.SetVertexShader NEW_FVF_VERTEX ' set new vertex format
-'    mDirectDevice.SetRenderState D3DRS_LIGHTING, 0  ' lighting off
+    D3DVertexBuffer8SetData uiVertexBuffer, 0, Len(QuadVerts(0)) * 6, 0, QuadVerts(0)
 End Sub
 
-Private Sub triangle()
-    TriVert(0) = CreateNewVertex(500, 500, 0, 1, &HFF0000, 0, 0, 0)
-    TriVert(1) = CreateNewVertex(700, 700, 0, 1, &HFF00&, 0, 0, 0)
-    TriVert(2) = CreateNewVertex(300, 700, 0, 1, &HFF&, 0, 0, 0)
+Private Sub initMap2()
+    Dim x As Integer
+    Dim y As Integer
+    Dim cel As Integer
+    Dim vList(0 To 24) As VERTEX
+
+    cel = 0
+    For y = 0 To ((MapSize - 1) * QuadDim) Step QuadDim
+        For x = 0 To ((MapSize * QuadDim - 1)) Step QuadDim
+            MapVerts(cel) = CreateVertex(CSng(x), CSng(y), 1, 0, 0)
+            MapVerts(cel + 1) = CreateVertex(CSng(x) + QuadDim, CSng(y), 1, 1, 0)
+            MapVerts(cel + 2) = CreateVertex(CSng(x), CSng(y) + QuadDim, 1, 0, 1)
+        
+            MapVerts(cel + 3) = CreateVertex(CSng(x), CSng(y) + QuadDim, 1, 0, 1)
+            MapVerts(cel + 4) = CreateVertex(CSng(x) + QuadDim, CSng(y), 1, 1, 0)
+            MapVerts(cel + 5) = CreateVertex(CSng(x) + QuadDim, CSng(y) + QuadDim, 1, 1, 1)
+            cel = cel + 6
+        Next x
+    Next y
+    
+    Set mapVertexBuffer = mDirectDevice.CreateVertexBuffer(Len(MapVerts(0)) * (MapSize * MapSize * 6), 0, FVF_VERTEX, D3DPOOL_MANAGED)
+    D3DVertexBuffer8SetData mapVertexBuffer, 0, Len(MapVerts(0)) * (MapSize * MapSize * 6), 0, MapVerts(0)
+    
+End Sub
+
+Private Sub initMap()
+Dim x As Integer
+Dim y As Integer
+Dim Index As Integer
+Dim cel As Integer
+Dim aux As Integer
+
+Dim numVerts As Integer
+numVerts = (MapSize + 1) * (MapSize + 1)
+Dim vList(0 To ((MapSize + 1) * (MapSize + 1) - 1)) As LITVERTEX
+Dim iList(0 To (MapSize * MapSize * 6 - 1)) As Integer
+
+cel = 0
+For y = 0 To (MapSize * 32) Step 32
+    For x = 0 To (MapSize * 32) Step 32
+        'vList(y * mapSize + x) = CreateLitVertex(CSng(x), CSng(y), 0, &HFF0000, 0, 0, 0)
+        vList(cel) = CreateLitVertex(CSng(x), CSng(y), 0, &HFF0000, 0, 0, 0)
+        cel = cel + 1
+    Next x
+Next y
+
+' creating vertex buffer
+Set mapVertexBuffer = mDirectDevice.CreateVertexBuffer(Len(vList(0)) * numVerts, 0, FVF_LVERTEX, D3DPOOL_MANAGED)
+If mapVertexBuffer Is Nothing Then Debug.Print "ERROR: Can't creating map vertex buffer": Exit Sub
+D3DVertexBuffer8SetData mapVertexBuffer, 0, Len(vList(0)) * numVerts, 0, vList(0)
+cel = 0
+y = 0
+aux = 1
+'For y = 0 To (mapSize * mapSize - 1)
+Do While (y < (MapSize * MapSize + MapSize))
+        iList(cel) = y: iList(cel + 1) = y + 1: iList(cel + 2) = y + MapSize + 1
+        iList(cel + 3) = y + MapSize + 1: iList(cel + 4) = y + 1: iList(cel + 5) = y + MapSize + 2
+        y = y + 1
+        If (aux = MapSize) Then
+            y = y + 1
+            aux = 0
+        End If
+        aux = aux + 1
+        cel = cel + 6
+Loop
+'Next y
+
+' create index buffer
+Set mapIndexBuffer = mDirectDevice.CreateIndexBuffer(Len(iList(0)) * (MapSize * MapSize * 6), 0, D3DFMT_INDEX16, D3DPOOL_MANAGED)
+If mapIndexBuffer Is Nothing Then Debug.Print "ERROR: creating map index buffer": Exit Sub
+D3DIndexBuffer8SetData mapIndexBuffer, 0, Len(iList(0)) * (MapSize * MapSize * 6), 0, iList(0)
 
 End Sub
 
-Private Sub Quad(posX As Single, posY As Single, width As Single, height As Single)
-    TriVert(0) = CreateNewVertex(posX, posY, 0, 1, &HFF0000, 0, 0, 0)
-    TriVert(1) = CreateNewVertex(posX + width, posY, 0, 1, &HFF00&, 0, 0, 0)
-    TriVert(2) = CreateNewVertex(posX, posY + height, 0, 1, &HFF&, 0, 0, 0)
-    TriVert(3) = CreateNewVertex(posX, posY + height, 0, 1, &HFF0000, 0, 0, 0)
-    TriVert(4) = CreateNewVertex(posX + width, posY, 0, 1, &HFF00&, 0, 0, 0)
-    TriVert(5) = CreateNewVertex(posX + width, posY + height, 0, 1, &HFF&, 0, 0, 0)
+Private Sub initObjects()
+    Dim x As Integer
+    Dim y As Integer
+    Dim texQuad As Single
+    Dim depth As Single
+    
+    x = 0
+    y = 0
+    texQuad = 0.09
+    offsetObject = 0
+    depth = 0.9
+    ' Esqueleto
+    'PlaneVerts(0) = CreateVertex(CSng(x), CSng(y), depth, 0, 0)
+    'PlaneVerts(1) = CreateVertex(CSng(x) + QuadDim, CSng(y), depth, texQuad, 0)
+    'PlaneVerts(2) = CreateVertex(CSng(x), CSng(y) + QuadDim, depth, 0, texQuad)
+        
+    'PlaneVerts(3) = CreateVertex(CSng(x), CSng(y) + QuadDim, depth, 0, texQuad)
+    'PlaneVerts(4) = CreateVertex(CSng(x) + QuadDim, CSng(y), depth, texQuad, 0)
+    'PlaneVerts(5) = CreateVertex(CSng(x) + QuadDim, CSng(y) + QuadDim, depth, texQuad, texQuad)
+    
+    
+    PlaneVerts(0) = CreateVertex(CSng(x), CSng(y), depth, texQuad, texQuad)
+    PlaneVerts(1) = CreateVertex(CSng(x) + QuadDim, CSng(y), depth, 0, texQuad)
+    PlaneVerts(2) = CreateVertex(CSng(x), CSng(y) + QuadDim, depth, texQuad, 0)
+    
+    PlaneVerts(3) = CreateVertex(CSng(x), CSng(y) + QuadDim, depth, texQuad, 0)
+    PlaneVerts(4) = CreateVertex(CSng(x) + QuadDim, CSng(y), depth, 0, texQuad)
+    PlaneVerts(5) = CreateVertex(CSng(x) + QuadDim, CSng(y) + QuadDim, depth, 0, 0)
+    ' ------------------------------------------------------------------------
+    PlaneVerts(6) = CreateVertex(CSng(x), CSng(y), depth, texQuad * 1, 0)
+    PlaneVerts(7) = CreateVertex(CSng(x) + QuadDim, CSng(y), depth, texQuad * 2, 0)
+    PlaneVerts(8) = CreateVertex(CSng(x), CSng(y) + QuadDim, depth, 0, texQuad)
+        
+    PlaneVerts(9) = CreateVertex(CSng(x), CSng(y) + QuadDim, depth, texQuad * 1, texQuad)
+    PlaneVerts(10) = CreateVertex(CSng(x) + QuadDim, CSng(y), depth, texQuad * 2, 0)
+    PlaneVerts(11) = CreateVertex(CSng(x) + QuadDim, CSng(y) + QuadDim, depth, texQuad * 2, texQuad)
+    ' ------------------------------------------------------------------------
+    
+    PlaneVerts(12) = CreateVertex(CSng(x), CSng(y), depth, texQuad * 2, 0)
+    PlaneVerts(13) = CreateVertex(CSng(x) + QuadDim, CSng(y), depth, texQuad * 3, 0)
+    PlaneVerts(14) = CreateVertex(CSng(x), CSng(y) + QuadDim, depth, 0, texQuad)
+        
+    PlaneVerts(15) = CreateVertex(CSng(x), CSng(y) + QuadDim, depth, texQuad * 1, texQuad)
+    PlaneVerts(16) = CreateVertex(CSng(x) + QuadDim, CSng(y), depth, texQuad * 3, 0)
+    PlaneVerts(17) = CreateVertex(CSng(x) + QuadDim, CSng(y) + QuadDim, depth, texQuad * 3, texQuad)
+    ' ------------------------------------------------------------------------
+    PlaneVerts(18) = CreateVertex(CSng(x), CSng(y), depth, texQuad * 3, 0)
+    PlaneVerts(19) = CreateVertex(CSng(x) + QuadDim, CSng(y), depth, texQuad * 4, 0)
+    PlaneVerts(20) = CreateVertex(CSng(x), CSng(y) + QuadDim, depth, 0, texQuad)
+        
+    PlaneVerts(21) = CreateVertex(CSng(x), CSng(y) + QuadDim, depth, texQuad * 3, texQuad)
+    PlaneVerts(22) = CreateVertex(CSng(x) + QuadDim, CSng(y), depth, texQuad * 4, 0)
+    PlaneVerts(23) = CreateVertex(CSng(x) + QuadDim, CSng(y) + QuadDim, depth, texQuad * 4, texQuad)
+    ' ------------------------------------------------------------------------
+    PlaneVerts(24) = CreateVertex(CSng(x), CSng(y), depth, texQuad * 4, 0)
+    PlaneVerts(25) = CreateVertex(CSng(x) + QuadDim, CSng(y), depth, texQuad * 5, 0)
+    PlaneVerts(26) = CreateVertex(CSng(x), CSng(y) + QuadDim, depth, 0, texQuad)
+        
+    PlaneVerts(27) = CreateVertex(CSng(x), CSng(y) + QuadDim, depth, texQuad * 4, texQuad)
+    PlaneVerts(28) = CreateVertex(CSng(x) + QuadDim, CSng(y), depth, texQuad * 5, 0)
+    PlaneVerts(29) = CreateVertex(CSng(x) + QuadDim, CSng(y) + QuadDim, depth, texQuad * 5, texQuad)
+    
+    Set objectVertexBuffer = mDirectDevice.CreateVertexBuffer(Len(PlaneVerts(0)) * 30, 0, FVF_VERTEX, D3DPOOL_MANAGED)
+    D3DVertexBuffer8SetData objectVertexBuffer, 0, Len(PlaneVerts(0)) * 30, 0, PlaneVerts(0)
+End Sub
+
+Private Sub InitScene()
+            
+    Call loadTextures
+    ' World Matrix
+    D3DXMatrixIdentity matWorld
+    mDirectDevice.SetTransform D3DTS_WORLD, matWorld
+
+    ' View Matrix
+    'D3DXMatrixLookAtLH matView, MakeVector(0, 5, 0), MakeVector(0, 0, 0), MakeVector(0, 0, 1)
+    D3DXMatrixLookAtLH matView, MakeVector(5, 5, -10), MakeVector(5, 5, 1), MakeVector(0, 1, 0)
+    mDirectDevice.SetTransform D3DTS_VIEW, matView
+
+    ' Projection Matrix
+    D3DXMatrixPerspectiveFovLH matProj, PI / 3, 1, 0.1, 100
+    mDirectDevice.SetTransform D3DTS_PROJECTION, matProj
+    Call initUI(300, 300, 300, 300)
+    Call initMap2
+    Call initObjects
+
 End Sub
 
 Public Sub render()
     On Error GoTo clsRender_Err
     
-    'Call mDirectDevice.Clear(0, ByVal 0, D3DCLEAR_TARGET Or D3DCLEAR_ZBUFFER, 300000, 1, 0)
-    mDirectDevice.Clear 0, ByVal 0, D3DCLEAR_TARGET, D3DColorRGBA(0, 150, 150, 255), 1#, 0
+    mDirectDevice.Clear 0, ByVal 0, D3DCLEAR_TARGET Or D3DCLEAR_ZBUFFER, D3DColorRGBA(0, 150, 150, 255), 1#, 0
     mDirectDevice.BeginScene
     
-    mDirectDevice.DrawPrimitiveUP D3DPT_TRIANGLELIST, 2, TriVert(0), Len(TriVert(0))
+    Call prepareRender
+    Call renderMap2
+    
+    Call prepareObjects
+    Call renderObjects
+    
+    'Call prepareUI
+    'Call renderUI
+        
     Call mDirectDevice.EndScene
       
     Call mDirectDevice.Present(ByVal 0, ByVal 0, 0, ByVal 0)
@@ -241,4 +438,84 @@ Public Sub render()
 clsRender_Err:
     Call RegistrarError(Err.Number, Err.Description, "clsRenderer.render", Erl)
     Resume Next
+End Sub
+
+Private Sub prepareUI()
+    mDirectDevice.SetRenderState D3DRS_LIGHTING, 0  ' lighting off
+    mDirectDevice.SetRenderState D3DRS_CULLMODE, D3DCULL_NONE ' No culling mode
+    mDirectDevice.SetTextureStageState 0, D3DTSS_MAGFILTER, D3DTEXF_LINEAR
+    mDirectDevice.SetTextureStageState 0, D3DTSS_MINFILTER, D3DTEXF_LINEAR
+    mDirectDevice.SetTexture 0, textures(1)
+    mDirectDevice.SetTextureStageState 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1
+    mDirectDevice.SetTextureStageState 0, D3DTSS_COLORARG1, D3DTA_TEXTURE
+    mDirectDevice.SetVertexShader FVF_UIVERTEX ' render 2D vertex
+
+End Sub
+
+Private Sub renderUI()
+    mDirectDevice.SetStreamSource 0, uiVertexBuffer, Len(QuadVerts(0))
+    mDirectDevice.DrawPrimitive D3DPT_TRIANGLELIST, 0, 2
+
+End Sub
+
+Private Sub prepareRender()
+    mDirectDevice.SetRenderState D3DRS_ZENABLE, True ' enable Z buffer
+    mDirectDevice.SetRenderState D3DRS_CULLMODE, D3DCULL_NONE ' No culling mode
+    mDirectDevice.SetRenderState D3DRS_LIGHTING, False  ' lighting off
+    mDirectDevice.SetTextureStageState 0, D3DTSS_MAGFILTER, D3DTEXF_LINEAR
+    mDirectDevice.SetTextureStageState 0, D3DTSS_MINFILTER, D3DTEXF_LINEAR
+    mDirectDevice.SetTexture 0, textures(2)
+    mDirectDevice.SetTextureStageState 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1
+    mDirectDevice.SetTextureStageState 0, D3DTSS_COLORARG1, D3DTA_TEXTURE
+    mDirectDevice.SetVertexShader FVF_VERTEX
+  
+End Sub
+
+Private Sub renderMap2()
+    mDirectDevice.SetStreamSource 0, mapVertexBuffer, Len(MapVerts(0))
+    mDirectDevice.DrawPrimitive D3DPT_TRIANGLELIST, 0, (MapSize * MapSize * 6)
+
+End Sub
+
+Private Sub renderMap()
+    mDirectDevice.SetStreamSource 0, mapVertexBuffer, Len(MapVerts(0))
+    mDirectDevice.SetIndices mapIndexBuffer, 0
+    mDirectDevice.DrawIndexedPrimitive D3DPT_TRIANGLELIST, 0, (MapSize * MapSize * 6), 0, (MapSize * MapSize * 6) / 3
+
+End Sub
+
+Private Sub prepareObjects()
+    mDirectDevice.SetRenderState D3DRS_LIGHTING, 0  ' lighting off
+    mDirectDevice.SetRenderState D3DRS_CULLMODE, D3DCULL_NONE ' No culling mode
+    mDirectDevice.SetTextureStageState 0, D3DTSS_MAGFILTER, D3DTEXF_LINEAR
+    mDirectDevice.SetTextureStageState 0, D3DTSS_MINFILTER, D3DTEXF_LINEAR
+    mDirectDevice.SetTexture 0, textures(3)
+    mDirectDevice.SetTextureStageState 0, D3DTSS_COLOROP, D3DTOP_SELECTARG1
+    mDirectDevice.SetTextureStageState 0, D3DTSS_COLORARG1, D3DTA_TEXTURE
+    mDirectDevice.SetVertexShader FVF_VERTEX
+
+End Sub
+
+Private Sub renderObjects()
+    mDirectDevice.SetStreamSource 0, objectVertexBuffer, Len(PlaneVerts(0))
+    mDirectDevice.DrawPrimitive D3DPT_TRIANGLELIST, 0, 2
+
+End Sub
+
+Private Sub addQuad()
+
+End Sub
+
+Private Sub addPlane()
+
+
+End Sub
+
+Private Sub loadTextures()
+    Set textures(1) = mDirectD3D8.CreateTextureFromFile(mDirectDevice, App.path + "\textura.bmp")
+    If textures(1) Is Nothing Then Exit Sub
+    Set textures(2) = mDirectD3D8.CreateTextureFromFile(mDirectDevice, App.path + "\grass.png")
+    If textures(2) Is Nothing Then Exit Sub
+    Set textures(3) = mDirectD3D8.CreateTextureFromFile(mDirectDevice, App.path + "\esqueleto.png")
+    If textures(3) Is Nothing Then Exit Sub
 End Sub
