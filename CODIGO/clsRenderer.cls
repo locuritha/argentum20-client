@@ -422,14 +422,15 @@ Public Sub render()
     mDirectDevice.Clear 0, ByVal 0, D3DCLEAR_TARGET Or D3DCLEAR_ZBUFFER, D3DColorRGBA(0, 150, 150, 255), 1#, 0
     mDirectDevice.BeginScene
     
-    Call prepareRender
-    Call renderMap2
+'    Call prepareRender
+'    Call renderMap2
     
-    Call prepareObjects
-    Call renderObjects
+'    Call prepareObjects
+'    Call renderObjects
     
-    'Call prepareUI
-    'Call renderUI
+'    Call prepareUI
+'    Call renderUI
+    Call RenderScreen
         
     Call mDirectDevice.EndScene
       

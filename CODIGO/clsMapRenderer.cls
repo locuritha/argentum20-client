@@ -1,6 +1,18 @@
-Attribute VB_Name = "ao20rendering"
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+  Persistable = 0  'NotPersistable
+  DataBindingBehavior = 0  'vbNone
+  DataSourceBehavior  = 0  'vbNone
+  MTSTransactionMode  = 0  'NotAnMTSObject
+END
+Attribute VB_Name = "clsMapRenderer"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = True
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = False
 '    Argentum 20 - Game Client Program
-'    Copyright (C) 2022 - Noland Studios
+'    Copyright (C) 2023 - Noland Studios
 '
 '    This program is free software: you can redistribute it and/or modify
 '    it under the terms of the GNU Affero General Public License as published by
@@ -13,10 +25,22 @@ Attribute VB_Name = "ao20rendering"
 '    GNU Affero General Public License for more details.
 '    You should have received a copy of the GNU Affero General Public License
 '    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-'
-'
+
+Option Base 0
+
 Option Explicit
 
-Public renderer                         As clsRenderer
-Public map_renderer                     As clsMapRenderer
+Private m_renderer   As clsRenderer
 
+Private Sub Class_Initialize()
+   Set m_renderer = Nothing
+End Sub
+
+Public Sub set_renderer(ByRef renderer As clsRenderer)
+   Set m_renderer = renderer
+End Sub
+
+Public render()
+
+
+End Sub

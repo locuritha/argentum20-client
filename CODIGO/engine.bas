@@ -287,6 +287,8 @@ On Error GoTo NewEngineInitErr:
     Set renderer = New clsRenderer
     Call renderer.init(frmMain.renderer.hwnd)
     Debug.Print "Renderer OK"
+    Set map_renderer = New clsMapRenderer
+    map_renderer.set_renderer (renderer)
     Exit Sub
     
 NewEngineInitErr:
